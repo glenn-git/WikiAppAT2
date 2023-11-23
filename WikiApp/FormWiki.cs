@@ -91,9 +91,11 @@ namespace WikiApp
             }
             else
             {
-                structure = "~"; //Set ~ to be consistent with AT1 2Darray method
-                //maybe better if ask user input instead
+                toolStripStatusLabel1.Text = "Please select structure";
+                return;
             }
+        
+    
             //Check definition
             if (string.IsNullOrWhiteSpace(textBoxDefinition.Text))
             {
@@ -101,13 +103,13 @@ namespace WikiApp
                 ChangeControlColour(1, textBoxDefinition);
                 return;
             }
-
+            //If trimmed after if (ValidName(name)) this will bypass duplicate check as values are always different
+            string str = textBoxName.Text.Trim();
+            name = char.ToUpper(str[0]) + str.Substring(1);
             //Finally check duplicate name. If valid then add
             if (ValidName(name))
             {
-                //Replace values that needs trim and capitalised first letter
-                string str = textBoxName.Text.Trim();
-                name = char.ToUpper(str[0]) + str.Substring(1);
+                //Replace other values that needs trim and capitalised first letter
                 str = comboBoxCategory.Text.Trim();
                 category = char.ToUpper(str[0]) + str.Substring(1);
                 str = textBoxDefinition.Text.Trim();
@@ -207,7 +209,6 @@ namespace WikiApp
             }
         }
         #endregion
-
         #region VALIDNAME method
         /// <summary>
         /// 6.5 Create a custom ValidName method which will take a parameter string value from the Textbox Name
@@ -290,15 +291,15 @@ namespace WikiApp
             {
                 if (textBoxName.Text.Trim() != "~")
                 {
-                    DialogResult result = MessageBox.Show("Are you sure you want to delete?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                    if (result == DialogResult.Yes)
-                    {
+                    //DialogResult result = MessageBox.Show("Are you sure you want to delete?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    //if (result == DialogResult.Yes)
+                    //{
                     int index = listViewInformation.SelectedIndices[0];
                     Wiki.RemoveAt(index);
                     DisplayInformation(Wiki, listViewInformation);
                     toolStripStatusLabel1.Text = $"{textBoxName.Text} is deleted successfully";
                     ClearInformation(); //Clear previous selection
-                    }
+                    //}
                 }
                 else
                     toolStripStatusLabel1.Text = "Please enter proper value";
