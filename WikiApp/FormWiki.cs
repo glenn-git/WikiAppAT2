@@ -80,7 +80,6 @@ namespace WikiApp
             //Check structure
             //condition ? consequent : alternative https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/conditional-operator
             //string structure = radioButtonLinear.Checked ? "Linear" : (radioButtonNonLinear.Checked ? "Non-Linear" : ""); //ternary conditional operator still not sure how to use
-
             if (radioButtonLinear.Checked)
             {
                 structure = radioButtonLinear.Text;
@@ -94,8 +93,6 @@ namespace WikiApp
                 toolStripStatusLabel1.Text = "Please select structure";
                 return;
             }
-        
-    
             //Check definition
             if (string.IsNullOrWhiteSpace(textBoxDefinition.Text))
             {
@@ -131,7 +128,6 @@ namespace WikiApp
                 toolStripStatusLabel1.Text = $"{textBoxName.Text} exists. not a valid name";
             }
         }
-
         //Method to change control colour. Receives paramater from method call (integer)
         private void ChangeControlColour(int colour, Control control)
         {
@@ -224,7 +220,7 @@ namespace WikiApp
         {
             //If match exists
             bool validName = Wiki.Exists(info => info.Name == name);
-            //return false; //NO. if match should not return false as well. Can't add new
+            //return false; //ERROR. if match should not return false as well. Can't add new
             return !validName;
         }
         #endregion
@@ -566,27 +562,6 @@ namespace WikiApp
                         Wiki.Add(info);
                     }
                 }
-                //LOAD METHOD FOR 2DARRAY (still has error)
-                //// Initialize row and column counters
-                //int rowCount = 0;
-                //int columnCount = 0;
-                //// Read the data from the file and populate the 2D array
-                //for (int i = 0; i < max; i++)
-                //{
-                //    for (int j = 0; j < attributes; j++)
-                //    {
-                //        arrayRecord[i, j] = binaryReader.ReadString();
-                //        columnCount++;
-                //    }
-                //    rowCount++;
-                //    ptr++;
-                //}
-                //// Check if the number of rows and columns in the file matches the expected dimensions STILL ERROR
-                //if (rowCount != max || columnCount != max * attributes)
-                //{
-                //    MessageBox.Show("Invalid file format. Number of Rows and columns do not match", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                //    return false;
-                //}
                 return true;
             }
             catch (Exception ex)
@@ -683,6 +658,11 @@ namespace WikiApp
         /// Map the programming criteria and features to your code/methods by adding comments above the method signatures.
         /// Ensure your code is compliant with the CITEMS coding standards (refer http://www.citems.com.au/). 
         /// </summary>
+        private void comboBoxCategory_MouseClick(object sender, MouseEventArgs e)
+        {
+            //Sort when drop down opened.
+            comboBoxCategory.Sorted = true;
+        }
         private void textBoxName_TextChanged(object sender, EventArgs e)
         {
             ValidateText(textBoxName, 32);
@@ -767,12 +747,6 @@ namespace WikiApp
             toolStripStatusLabel1.Text = string.Empty;
         }
         #endregion
-
-        private void comboBoxCategory_MouseClick(object sender, MouseEventArgs e)
-        {
-            //Sort when drop down opened
-            comboBoxCategory.Sorted = true;
-        }
     }
 }
 /* NOTES
@@ -814,28 +788,4 @@ namespace WikiApp
  
 ternary conditional operator https://www.reddit.com/r/csharp/comments/13i5rvr/operator/?rdt=51863
 https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/conditional-operator
-var x = foo ? "blue" : "red";
-// same as
-var x;
-if(foo) {
-    x = "blue";
-} else {
-    x = "red";
-}
-
-var x = foo ?? bar;
-// same as
-var x;
-if(foo != null) {
-    x = foo;
-} else {
-    x = bar;
-}
-
-var x ??= foo;
-// same as
-var x;
-if(x == null) {
-    x = foo;
-}
- */
+*/
