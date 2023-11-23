@@ -207,6 +207,7 @@ namespace WikiApp
             }
         }
         #endregion
+
         #region VALIDNAME method
         /// <summary>
         /// 6.5 Create a custom ValidName method which will take a parameter string value from the Textbox Name
@@ -289,15 +290,15 @@ namespace WikiApp
             {
                 if (textBoxName.Text.Trim() != "~")
                 {
-                    //DialogResult result = MessageBox.Show("Are you sure you want to delete?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                    //if (result == DialogResult.Yes)
-                    //{
+                    DialogResult result = MessageBox.Show("Are you sure you want to delete?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    if (result == DialogResult.Yes)
+                    {
                     int index = listViewInformation.SelectedIndices[0];
                     Wiki.RemoveAt(index);
                     DisplayInformation(Wiki, listViewInformation);
                     toolStripStatusLabel1.Text = $"{textBoxName.Text} is deleted successfully";
                     ClearInformation(); //Clear previous selection
-                    //}
+                    }
                 }
                 else
                     toolStripStatusLabel1.Text = "Please enter proper value";
