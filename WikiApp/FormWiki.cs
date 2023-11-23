@@ -4,11 +4,12 @@
 
 using System.Diagnostics;
 using System.Windows.Forms;
-using System.IO; // For TextWriter
+using System.IO; // For StreamWriter, BinaryWriter
 using System.Text;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.Text.RegularExpressions;
 using System.Drawing;
+using System.Xml.Linq;
+using System;
 
 namespace WikiApp
 {
@@ -33,7 +34,7 @@ namespace WikiApp
         /// PascalCase for all identifiers (class names/constant names+local/properties/methods) except compound words and parameters.
         /// </remarks>
         private List<Information> Wiki = new List<Information>();
-        private const string FileNameCategory = "Category.txt"; //file systems on Windows are case-insensitive. Not Linux / macOS. C# convention use PascalCase Categories.txt, but use conventions followed by team or community.
+        private const string FileNameCategory = "category.txt"; //file systems on Windows are case-insensitive. Not Linux / macOS. C# convention use PascalCase Categories.txt, but use conventions followed by team or community.
         private const string FileNameInformation = "definitions.dat";
         Stopwatch stopwatch = new Stopwatch(); // stopwatch to measure time
         #endregion
@@ -46,14 +47,40 @@ namespace WikiApp
         private void buttonAdd_Click(object sender, EventArgs e)
         {
             AddRecord();
+            //Display from Information to listView
+            //DisplayInformation(Wiki, listViewInformation); //ERROR. display change back ChangeControlColour to default
         }
+
         private void AddRecord()
         {
-            //Get values from controls            
+            //Get values from control inputs        
             string name = textBoxName.Text;
             string category = comboBoxCategory.Text;
-            string structure; //
-            //string category = comboBoxCategory.SelectedItem?.ToString();
+            string structure; //get values later if radiobutton checked
+            string definition = textBoxDefinition.Text;
+            //Check name
+            if (string.IsNullOrWhiteSpace(textBoxName.Text))
+            {
+                toolStripStatusLabel1.Text = "Please enter name";
+                ChangeControlColour(1, textBoxName);
+                return;
+            }
+            if (textBoxName.Text == "~")
+            {
+                toolStripStatusLabel1.Text = "Please enter proper value";
+                return;
+            }
+            //Check category
+            if (string.IsNullOrWhiteSpace(comboBoxCategory.Text))
+            {
+                toolStripStatusLabel1.Text = "Please enter category";
+                ChangeControlColour(1, comboBoxCategory);
+                return;
+            }
+            //Check structure
+            //condition ? consequent : alternative https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/conditional-operator
+            //string structure = radioButtonLinear.Checked ? "Linear" : (radioButtonNonLinear.Checked ? "Non-Linear" : ""); //ternary conditional operator still not sure how to use
+
             if (radioButtonLinear.Checked)
             {
                 structure = radioButtonLinear.Text;
@@ -64,19 +91,37 @@ namespace WikiApp
             }
             else
             {
-                structure = "~";
+                structure = "~"; //Set ~ to be consistent with AT1 2Darray method
+                //maybe better if ask user input instead
             }
-            //string structure = radioButtonLinear.Checked ? "Linear" : (radioButtonNonLinear.Checked ? "Non-Linear" : ""); //ternary conditional operator still not sure how to use
-            string definition = textBoxDefinition.Text;
+            //Check definition
+            if (string.IsNullOrWhiteSpace(textBoxDefinition.Text))
+            {
+                toolStripStatusLabel1.Text = "Please enter definition";
+                ChangeControlColour(1, textBoxDefinition);
+                return;
+            }
 
-            //Check duplicates. is name valid?
+            //Finally check duplicate name. If valid then add
             if (ValidName(name))
             {
+                //Replace values that needs trim and capitalised first letter
+                string str = textBoxName.Text.Trim();
+                name = char.ToUpper(str[0]) + str.Substring(1);
+                str = comboBoxCategory.Text.Trim();
+                category = char.ToUpper(str[0]) + str.Substring(1);
+                str = textBoxDefinition.Text.Trim();
+                definition = char.ToUpper(str[0]) + str.Substring(1);
+
                 //Start adding Information to listView
                 Information info = new Information(name, category, structure, definition);
                 Wiki.Add(info);
-                //Display from Information to listView
+                //Also update category drop down if distinct
+                if (!comboBoxCategory.Items.Contains(category))
+                    comboBoxCategory.Items.Add(category);
+                //Update display from Information to listView
                 DisplayInformation(Wiki, listViewInformation);
+                //Update status
                 toolStripStatusLabel1.Text = $"{textBoxName.Text} is added successfully";
             }
             else
@@ -84,12 +129,13 @@ namespace WikiApp
                 toolStripStatusLabel1.Text = $"{textBoxName.Text} exists. not a valid name";
             }
         }
-        //Method to change text box colours. Receives paramater from method call (integer)
+
+        //Method to change control colour. Receives paramater from method call (integer)
         private void ChangeControlColour(int colour, Control control)
         {
             if (control != null)
             {
-                control.ForeColor = Color.Black;
+                control.ForeColor = Color.White;
                 switch (colour)
                 {
                     //case 0: control.BackColor = default(Color); break; //if case 0 is red, default stay red?
@@ -104,7 +150,9 @@ namespace WikiApp
                         control.BackColor = Color.Indigo;
                         control.ForeColor = Color.White; break;
                     case 7: control.BackColor = Color.Violet; break;
-                    default: control.BackColor = default(Color); break;
+                    default:
+                        control.ForeColor = default(Color);
+                        control.BackColor = default(Color); break;
                 }
             }
         }
@@ -122,7 +170,6 @@ namespace WikiApp
         {
             initializeCategory();
         }
-        #endregion
         private void initializeCategory()
         {
             //Clear Categories
@@ -141,7 +188,6 @@ namespace WikiApp
                     while (!textReader.EndOfStream)
                     {
                         string category = textReader.ReadLine();
-                        // Set fields before adding item
                         comboBoxCategory.Items.Add(category);
                     }
                 }
@@ -155,11 +201,12 @@ namespace WikiApp
                     //string categories
                     string categories = "Abstract\nArray\nGraph\nHash\nList\nTree";
                     File.WriteAllText(FileNameCategory, categories);
-                    MessageBox.Show("Cannot find Category.txt. empty file is created instead. Please try again");
+                    MessageBox.Show("Cannot find Category.txt. default file is created instead. Please try again");
                     //toolStripStatusLabel1.Text = "File created successfully!";
                 }
             }
         }
+        #endregion
         #region VALIDNAME method
         /// <summary>
         /// 6.5 Create a custom ValidName method which will take a parameter string value from the Textbox Name
@@ -323,7 +370,7 @@ namespace WikiApp
             }
             else
             {
-                MessageBox.Show("Class Information is not placed into listview");
+                MessageBox.Show("Class Information is not placed into listView");
             }
         }
         #endregion
@@ -337,7 +384,55 @@ namespace WikiApp
         //Search button
         private void buttonSearch_Click(object sender, EventArgs e)
         {
-
+            SearchName();
+            textBoxSearch.Clear();
+            textBoxSearch.Focus();//set input focus without selecting text.
+            //textBoxSearch.Select(); //set input focus and select all text within control
+        }
+        //used internal static so Information class can use it. static for one shared instance
+        internal static string ReplaceString(string input)
+        {
+            //match any characters that are not letters/digits, replace with empty string ""
+            return Regex.Replace(input, "[^a-zA-Z0-9]+", "").ToLowerInvariant();
+        }
+        private void SearchName()
+        {
+            stopwatch.Reset();
+            stopwatch.Start();
+            if (string.IsNullOrWhiteSpace(textBoxSearch.Text))
+            {
+                toolStripStatusLabel1.Text = "Enter Name to search";
+            }
+            else
+            {
+                bool found = false;
+                //replace method to ignore dash e.g. Self-Balance Tree
+                string searchName = ReplaceString(textBoxSearch.Text);
+                //Create local instance to compare in binary search
+                Information searchInfo = new Information
+                {
+                    Name = searchName
+                };
+                // Use built-in binarysearch to find index
+                //not sure how to use ReplaceString on Wiki before comparing.
+                int searchIndex = Wiki.BinarySearch(searchInfo);
+                //Wiki.BinarySearch(searchName); //ERROR CS1503 Cannot convert from string to WikiApp.Information
+                if (searchIndex >= 0)
+                {
+                    //Select search index in listview
+                    listViewInformation.SelectedIndices.Clear(); //fix selecting previous index / making multiple .SelectedIndices.Add
+                    listViewInformation.SelectedIndices.Add(searchIndex);
+                    toolStripStatusLabel1.Text = $"{textBoxName.Text:F2} is found! ({stopwatch.Elapsed.TotalSeconds:F3} seconds)";
+                    found = true;
+                    Trace.TraceInformation("Search Index: {0} Found: {1} \n\tName: {2} \n\tCategory: {3} \n\tStructure: {4} \n\tDefinition: {5}", searchIndex, found, Wiki[searchIndex].Name, Wiki[searchIndex].Category, Wiki[searchIndex].Structure, Wiki[searchIndex].Definition);
+                }
+                else
+                {
+                    toolStripStatusLabel1.Text = textBoxSearch.Text + $" not found ({stopwatch.Elapsed.TotalSeconds:F3} seconds)";
+                    found = false;
+                }
+            }
+            stopwatch.Stop();
         }
         #endregion
 
@@ -360,20 +455,6 @@ namespace WikiApp
                 textBoxDefinition.Text = info.Definition;
             }
         }
-        //private void DisplayInListView()
-        //{
-        //    listViewInformation.Items.Clear(); // Clear existing items
-
-        //    foreach (var information in Wiki)
-        //    {
-        //        ListViewItem item = new ListViewItem(information.Name);
-        //        item.SubItems.Add(information.Category);
-        //        item.SubItems.Add(information.Structure);
-        //        item.SubItems.Add(information.Definition);
-
-        //        listViewInformation.Items.Add(item);
-        //    }
-        //}
         #endregion
 
         #region CLEAR method
@@ -577,22 +658,14 @@ namespace WikiApp
         /// <summary>
         /// 6.15 The Wiki application will save data when the form closes.
         /// </summary>
-        #endregion
         private void FormWiki_FormClosing(object sender, FormClosingEventArgs e)
         {
             DialogResult result = MessageBox.Show("Do you want to save changes before closing?", "Confirm", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
 
             if (result == DialogResult.Yes)
             {
-                try
-                {
-                    SaveFileDialog();
-                    SaveToBinary(FileNameInformation);
-                }
-                catch (Exception ex)
-                {
-                    toolStripStatusLabel1.Text = "Error writing data to file: " + ex.Message;
-                }
+                SaveFileDialog();
+                SaveToBinary(FileNameInformation);
             }
             else if (result == DialogResult.Cancel)
             {
@@ -600,13 +673,27 @@ namespace WikiApp
                 e.Cancel = true;
             }
         }
+        #endregion
+
         #region
         /// <summary>
         /// 6.16 All code is required to be adequately commented.
         /// Map the programming criteria and features to your code/methods by adding comments above the method signatures.
         /// Ensure your code is compliant with the CITEMS coding standards (refer http://www.citems.com.au/). 
         /// </summary>
-                //ValidateText method
+        private void textBoxName_TextChanged(object sender, EventArgs e)
+        {
+            ValidateText(textBoxName, 32);
+        }
+        private void comboBoxCategory_TextChanged(object sender, EventArgs e)
+        {
+            ValidateText(comboBoxCategory, 32);
+        }
+        private void textBoxDefinition_TextChanged(object sender, EventArgs e)
+        {
+            ValidateText(textBoxDefinition, 250);
+        }
+        //ValidateText method
         private void ValidateText(Control control, int charLimit)
         {
             if (control is System.Windows.Forms.TextBox textBox)
@@ -663,119 +750,27 @@ namespace WikiApp
                 }
             }
         }
-        private void textBoxDefinition_TextChanged_1(object sender, EventArgs e)
-        {
-            ValidateText(textBoxDefinition, 250);
-        }
-
-        private void textBoxName_TextChanged(object sender, EventArgs e)
-        {
-            ValidateText(textBoxName, 32);
-        }
-
-        /// <summary>
-        /// ented.
-        /// </summary>
-        /// <remarks>
-        ///             <see href= "https://learn.microsoft.com/en-us/troubleshoot/developer/visualstudio/csharp/language-compilers/read-write-text-file">
-        ///             using (var sr = new StreamReader("TestFile.txt"))<see href= "https://learn.microsoft.com/en-us/dotnet/standard/io/how-to-read-text-from-a-file">
-        /// </remarks>
-        private void comboBoxCategory_MouseClick(object sender, MouseEventArgs e)
-        {
-            //comboBoxCategory.Items.Clear(); //for testing
-            comboBoxCategory.BeginUpdate();
-            //string filePath = "../" + FileNameCategories;
-            if (File.Exists(FileNameCategory))
-            {
-                try
-                {
-                    // Read all lines from the file and add them to the ComboBox
-                    string[] lines = File.ReadAllLines(FileNameCategory);
-                    comboBoxCategory.Items.AddRange(lines);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error reading file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-            else
-            {
-                MessageBox.Show("File does not exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            comboBoxCategory.Sorted = true;
-            comboBoxCategory.EndUpdate();
-        }
-
-        //    try
-        //{
-        //    string filePath = "Category.txt";
-        //    if (File.Exists(filePath))
-        //    {
-        //        using (var sr = new StreamReader("TestFile.txt"))
-        //        {
-        //            comboBoxCategory.Items.Add(sr.ReadToEnd);
-        //        }
-
-
-
-
-        //        //    string[] lines = File.ReadAllLines(filePath);
-        //        //foreach (string line in lines)
-        //        //{
-        //        //    string category = line.Trim();
-        //        //    if (!comboBoxCategory.Items.Contains(category))
-        //        //    {
-        //        //        comboBoxCategory.Items.Add(category);
-        //        //    }
-        //        //}
-        //    }
-        //    else
-        //    {
-        //        MessageBox.Show("File not found");
-        //    }
-        //}
-        //catch (Exception ex)
-        //{
-        //    MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        //}
-        //finally
-        //{
-        //    // Using StreamWriter
-        //    StreamWriter sw = new StreamWriter(FileNameCategories, false, Encoding.UTF8);
-        //    try
-        //    {
-        //        // create writer object - true means append
-        //        TextWriter tw = new StreamWriter(FileNameCategories, true);
-        //        // write each item as a separate line
-        //        tw.WriteLine(comboBoxCategory.Text);
-        //        // close the StreamWriter
-        //        tw.Close();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MessageBox.Show("what");
-        //    }
-        //    comboBoxCategory.Sorted = true;
-        //    comboBoxCategory.EndUpdate();
-        //}
-        //for (int i = 0; i < ptr; i++)
-        //{
-        //    if (!comboBoxCategory.Items.Contains($"{arrayRecord[i, 1]}"))
-        //    {
-        //        comboBoxCategory.Items.Add($"{arrayRecord[i, 1]}");
-        //    }
-        //}
-        //comboBoxCategory.Sorted = true;
-        //comboBoxCategory.EndUpdate();
-
         //Reset button
         private void buttonReset_Click(object sender, EventArgs e)
         {
-            listViewInformation.Items.Clear();
+            //Clear input controls, list, listView, and status
             ClearInformation();
+            ChangeControlColour(default, textBoxName);
+            ChangeControlColour(default, comboBoxCategory);
+            ChangeControlColour(default, radioButtonLinear);
+            ChangeControlColour(default, radioButtonNonLinear);
+            ChangeControlColour(default, textBoxDefinition);
+            Wiki.Clear();
+            listViewInformation.Items.Clear();
             toolStripStatusLabel1.Text = string.Empty;
         }
         #endregion
+
+        private void comboBoxCategory_MouseClick(object sender, MouseEventArgs e)
+        {
+            //Sort when drop down opened
+            comboBoxCategory.Sorted = true;
+        }
     }
 }
 /* NOTES

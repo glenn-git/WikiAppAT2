@@ -76,7 +76,7 @@ namespace WikiApp
             //0 if a is equal to b
             //1 if a is greater than b
             if (other == null) return 1;
-            return this._name.CompareTo(other._name);
+            return FormWiki.ReplaceString(this._name).CompareTo(FormWiki.ReplaceString(other._name));
         }
     }
     #endregion

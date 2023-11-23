@@ -77,6 +77,8 @@
             comboBoxCategory.Name = "comboBoxCategory";
             comboBoxCategory.Size = new Size(160, 28);
             comboBoxCategory.TabIndex = 1;
+            comboBoxCategory.TextChanged += comboBoxCategory_TextChanged;
+            comboBoxCategory.MouseClick += comboBoxCategory_MouseClick;
             // 
             // radioButtonLinear
             // 
@@ -110,9 +112,9 @@
             textBoxDefinition.Multiline = true;
             textBoxDefinition.Name = "textBoxDefinition";
             textBoxDefinition.PlaceholderText = "enter definition";
-            textBoxDefinition.Size = new Size(306, 160);
+            textBoxDefinition.Size = new Size(313, 160);
             textBoxDefinition.TabIndex = 4;
-            textBoxDefinition.TextChanged += textBoxDefinition_TextChanged_1;
+            textBoxDefinition.TextChanged += textBoxDefinition_TextChanged;
             // 
             // listViewInformation
             // 
@@ -148,17 +150,17 @@
             // 
             // textBoxSearch
             // 
-            textBoxSearch.Location = new Point(390, 20);
+            textBoxSearch.Location = new Point(389, 20);
             textBoxSearch.Name = "textBoxSearch";
             textBoxSearch.PlaceholderText = "Search";
-            textBoxSearch.Size = new Size(339, 27);
+            textBoxSearch.Size = new Size(340, 27);
             textBoxSearch.TabIndex = 6;
             // 
             // buttonAdd
             // 
             buttonAdd.BackColor = Color.DeepSkyBlue;
             buttonAdd.ForeColor = SystemColors.ButtonHighlight;
-            buttonAdd.Location = new Point(260, 51);
+            buttonAdd.Location = new Point(229, 39);
             buttonAdd.Name = "buttonAdd";
             buttonAdd.Size = new Size(97, 37);
             buttonAdd.TabIndex = 7;
@@ -170,7 +172,7 @@
             // 
             buttonEdit.BackColor = SystemColors.AppWorkspace;
             buttonEdit.ForeColor = SystemColors.ButtonHighlight;
-            buttonEdit.Location = new Point(260, 137);
+            buttonEdit.Location = new Point(229, 123);
             buttonEdit.Name = "buttonEdit";
             buttonEdit.Size = new Size(97, 37);
             buttonEdit.TabIndex = 8;
@@ -182,7 +184,7 @@
             // 
             buttonDelete.BackColor = Color.Crimson;
             buttonDelete.ForeColor = SystemColors.ButtonHighlight;
-            buttonDelete.Location = new Point(248, 83);
+            buttonDelete.Location = new Point(229, 80);
             buttonDelete.Name = "buttonDelete";
             buttonDelete.Size = new Size(97, 37);
             buttonDelete.TabIndex = 9;
@@ -193,9 +195,9 @@
             // buttonSearch
             // 
             buttonSearch.Image = (Image)resources.GetObject("buttonSearch.Image");
-            buttonSearch.Location = new Point(347, 18);
+            buttonSearch.Location = new Point(355, 19);
             buttonSearch.Name = "buttonSearch";
-            buttonSearch.Size = new Size(33, 27);
+            buttonSearch.Size = new Size(33, 29);
             buttonSearch.TabIndex = 10;
             buttonSearch.UseVisualStyleBackColor = true;
             buttonSearch.Click += buttonSearch_Click;
@@ -203,7 +205,7 @@
             // buttonOpen
             // 
             buttonOpen.BackColor = Color.FromArgb(255, 192, 192);
-            buttonOpen.Location = new Point(390, 367);
+            buttonOpen.Location = new Point(389, 367);
             buttonOpen.Name = "buttonOpen";
             buttonOpen.Size = new Size(97, 37);
             buttonOpen.TabIndex = 11;
@@ -214,7 +216,7 @@
             // buttonSave
             // 
             buttonSave.BackColor = Color.FromArgb(192, 255, 192);
-            buttonSave.Location = new Point(512, 367);
+            buttonSave.Location = new Point(510, 367);
             buttonSave.Name = "buttonSave";
             buttonSave.Size = new Size(97, 37);
             buttonSave.TabIndex = 12;
@@ -224,7 +226,7 @@
             // 
             // buttonReset
             // 
-            buttonReset.Location = new Point(632, 367);
+            buttonReset.Location = new Point(631, 367);
             buttonReset.Name = "buttonReset";
             buttonReset.Size = new Size(97, 37);
             buttonReset.TabIndex = 13;
@@ -250,18 +252,20 @@
             // groupBox1
             // 
             groupBox1.Controls.Add(buttonDelete);
+            groupBox1.Controls.Add(buttonAdd);
             groupBox1.Controls.Add(label1);
             groupBox1.Controls.Add(label2);
             groupBox1.Controls.Add(label3);
             groupBox1.Controls.Add(label4);
+            groupBox1.Controls.Add(buttonEdit);
             groupBox1.Controls.Add(textBoxName);
             groupBox1.Controls.Add(comboBoxCategory);
             groupBox1.Controls.Add(radioButtonLinear);
             groupBox1.Controls.Add(radioButtonNonLinear);
             groupBox1.Controls.Add(textBoxDefinition);
-            groupBox1.Location = new Point(12, 12);
+            groupBox1.Location = new Point(12, 20);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(332, 400);
+            groupBox1.Size = new Size(337, 392);
             groupBox1.TabIndex = 15;
             groupBox1.TabStop = false;
             groupBox1.Text = "Wiki Information";
@@ -312,13 +316,11 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Control;
             ClientSize = new Size(773, 441);
-            Controls.Add(buttonAdd);
             Controls.Add(statusStrip1);
             Controls.Add(buttonReset);
             Controls.Add(buttonSave);
             Controls.Add(buttonOpen);
             Controls.Add(buttonSearch);
-            Controls.Add(buttonEdit);
             Controls.Add(textBoxSearch);
             Controls.Add(listViewInformation);
             Controls.Add(groupBox1);
