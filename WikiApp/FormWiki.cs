@@ -219,7 +219,7 @@ namespace WikiApp
         private bool ValidName(string name)
         {
             //If match exists
-            bool validName = Wiki.Exists(info => info.Name == name);
+            bool validName = Wiki.Exists(info => info.GetName() == name);
             //return false; //ERROR. if match should not return false as well. Can't add new
             Trace.TraceInformation("name: {0} \n\tvalidName: {1} \n\t!validName: {2}", name, validName, !validName);
 
@@ -298,7 +298,7 @@ namespace WikiApp
                         toolStripStatusLabel1.Text = $"{textBoxName.Text} is deleted successfully";
                         ClearInformation(); //Clear previous selection
                                             //Trace value on Output window Ctrl+Alt+O. {0} is format specifier, index is value that will replace {0} in log message
-                        Trace.TraceInformation("WikiIndex: {0} \t name: {1} \n\t DialogResult: {2}", index, Wiki[index].Name, result);
+                        Trace.TraceInformation("WikiIndex: {0} \t name: {1} \n\t DialogResult: {2}", index, Wiki[index].GetName(), result);
                     }
                 }
                 else
@@ -331,19 +331,19 @@ namespace WikiApp
                     int index = listViewInformation.SelectedIndices[0];
                     Information info = Wiki[index];
                     // show values from Information Class
-                    info.Name = textBoxName.Text;
-                    info.Category = comboBoxCategory.Text;
-                    HighlightStructure(info.Structure); //highlight checked box
-                    info.Definition = textBoxDefinition.Text;
+                    info.SetName(textBoxName.Text);
+                    info.SetCategory(comboBoxCategory.Text);
+                    HighlightStructure(info.GetStructure()); //highlight checked box
+                    info.SetDefinition(textBoxDefinition.Text);
                     //Trace value on Output window Ctrl+Alt+O. {0} is format specifier, index is value that will replace {0} in log message
-                    Trace.TraceInformation("Before Sort Wiki.IndexOf(info): {0} \t Wiki[index].Name: {1} \n\t listViewInformation.SelectedItems[0].SubItems[0].Text current text: {2}", Wiki.IndexOf(info), Wiki[index].Name, listViewInformation.SelectedItems[0].SubItems[0].Text);
+                    Trace.TraceInformation("Before Sort Wiki.IndexOf(info): {0} \t Wiki[index].Name: {1} \n\t listViewInformation.SelectedItems[0].SubItems[0].Text current text: {2}", Wiki.IndexOf(info), Wiki[index].GetName(), listViewInformation.SelectedItems[0].SubItems[0].Text);
                     // display new values to listView
                     DisplayInformation(Wiki, listViewInformation);
                     toolStripStatusLabel1.Text = $"{textBoxName.Text} is edited successfully";
                     //For Tracing
                     listViewInformation.SelectedIndices.Clear(); //fix selecting previous index / making multiple .SelectedIndices.Add
                     listViewInformation.SelectedIndices.Add(Wiki.IndexOf(info));
-                    Trace.TraceInformation("After Sort Wiki.IndexOf(info): {0} \t Wiki[index].Name: {1} \n\t listViewInformation.SelectedItems[0].SubItems[0].Text current text: {2}", Wiki.IndexOf(info), Wiki[index].Name, listViewInformation.SelectedItems[0].SubItems[0].Text);
+                    Trace.TraceInformation("After Sort Wiki.IndexOf(info): {0} \t Wiki[index].Name: {1} \n\t listViewInformation.SelectedItems[0].SubItems[0].Text current text: {2}", Wiki.IndexOf(info), Wiki[index].GetName(), listViewInformation.SelectedItems[0].SubItems[0].Text);
                 }
                 else
                     toolStripStatusLabel1.Text = "Please enter proper value";
@@ -369,10 +369,10 @@ namespace WikiApp
                 foreach (Information info in infoList)
                 {
                     //Add to columns
-                    ListViewItem item = new ListViewItem(info.Name);
-                    item.SubItems.Add(info.Category);
-                    item.SubItems.Add(info.Structure);
-                    item.SubItems.Add(info.Definition);
+                    ListViewItem item = new ListViewItem(info.GetName());
+                    item.SubItems.Add(info.GetCategory());
+                    item.SubItems.Add(info.GetStructure());
+                    item.SubItems.Add(info.GetDefinition());
                     listViewInformation.Items.Add(item);
                 }
             }
@@ -417,10 +417,13 @@ namespace WikiApp
                 //replace method to ignore dash e.g. Self-Balance Tree
                 string searchName = ReplaceString(textBoxSearch.Text);
                 //Create local instance to compare in binary search
-                Information searchInfo = new Information
-                {
-                    Name = searchName
-                };
+                Information searchInfo = new Information();
+                searchInfo.SetName(searchName);
+                //#2 
+                //Information searchInfo = new Information
+                //{
+                //    SetName(searchName); //ERROR. Name = searchName does not work with separate setter
+                //};
                 // Use built-in binarysearch to find index
                 //not sure how to use ReplaceString on Wiki before comparing.
                 int searchIndex = Wiki.BinarySearch(searchInfo);
@@ -432,7 +435,7 @@ namespace WikiApp
                     listViewInformation.SelectedIndices.Add(searchIndex);
                     toolStripStatusLabel1.Text = $"{textBoxName.Text:F2} is found! ({stopwatch.Elapsed.TotalSeconds:F3} seconds)";
                     found = true;
-                    Trace.TraceInformation("Search Index: {0} Found: {1} \n\tName: {2} \n\tCategory: {3} \n\tStructure: {4} \n\tDefinition: {5}", searchIndex, found, Wiki[searchIndex].Name, Wiki[searchIndex].Category, Wiki[searchIndex].Structure, Wiki[searchIndex].Definition);
+                    Trace.TraceInformation("Search Index: {0} Found: {1} \n\tName: {2} \n\tCategory: {3} \n\tStructure: {4} \n\tDefinition: {5}", searchIndex, found, Wiki[searchIndex].GetName(), Wiki[searchIndex].GetCategory(), Wiki[searchIndex].GetStructure(), Wiki[searchIndex].GetDefinition());
                 }
                 else
                 {
@@ -457,10 +460,10 @@ namespace WikiApp
                 int index = listViewInformation.SelectedIndices[0];
                 Information info = Wiki[index];
                 // show values from Information
-                textBoxName.Text = info.Name;
-                comboBoxCategory.Text = info.Category;
-                HighlightStructure(info.Structure); //highlight to checked box
-                textBoxDefinition.Text = info.Definition;
+                textBoxName.Text = info.GetName();
+                comboBoxCategory.Text = info.GetCategory();
+                HighlightStructure(info.GetStructure()); //highlight to checked box
+                textBoxDefinition.Text = info.GetDefinition();
             }
         }
         #endregion

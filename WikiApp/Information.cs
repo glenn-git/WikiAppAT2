@@ -1,9 +1,11 @@
 ﻿using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace WikiApp
 {
@@ -18,6 +20,7 @@ namespace WikiApp
     /// <remarks>
     /// icomparable <see href="https://learn.microsoft.com/en-us/dotnet/api/system.icomparable?view=net-7.0"/>
     /// </remarks>
+    [Serializable] //tells compiler and runtime that instances of class can be converted to binary or XML representation
     //: IComparable<T> instead of : IComparable allows instances to be compared to only <T> type objects
     internal class Information : IComparable<Information>
     {
@@ -30,6 +33,7 @@ namespace WikiApp
         public Information()
         {
             //Can replace with =null; =String.Empty or "";
+            //Private instance fields start with an underscore ( _ )
             _name = "~";
             _category = "~";
             _structure = "~";
@@ -46,6 +50,63 @@ namespace WikiApp
         }
 
         //Properties: Getters and setters 
+        public void SetName(string newName)
+        {
+            TextInfo ti = new CultureInfo("en-US", false).TextInfo;
+            newName = ti.ToTitleCase(newName);
+            _name = newName;
+        }
+        public string GetName()
+        {
+            return _name;
+        }
+        public void SetCategory(string newCategory)
+        {
+            _category = newCategory;
+        }
+        public string GetCategory()
+        {
+            return _category;
+        }
+        public void SetStructure(string newStructure)
+        {
+            _structure = newStructure;
+        }
+        public string GetStructure()
+        {
+            return _structure;
+        }
+        public void SetDefinition(string newDefinition)
+        {
+            _definition = newDefinition;
+        }
+        public string GetDefinition()
+        {
+            return _definition;
+        }
+        //Implementation of IComparable<T> interface for member field/variable name
+        public int CompareTo(Information other)
+        {
+            //-1 if a is less than b
+            //0 if a is equal to b
+            //1 if a is greater than b
+            if (other == null) return 1;
+            return FormWiki.ReplaceString(this._name).CompareTo(FormWiki.ReplaceString(other._name));
+        }
+    }
+    #endregion
+}
+/* Notes
+ * ListClass (2020, May 5). Personal communication [Visual Studio Solution]. https://blackboard.southmetrotafe.wa.edu.au
+ * Private instance fields start with an underscore (_). https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/identifier-names
+        //property Quickaction and Refractoring...
+        // => used in property is an expression body introduced from C#6, a shorthand for return
+        public string Name { get => _name; set => _name = value; }
+        public string Category { get => _category; set => _category = value; }
+        public string Structure { get => _structure; set => _structure = value; }
+        public string Definition { get => _definition; set => _definition = value; }
+
+//2
         public string Name
         {
             get { return _name; }
@@ -69,25 +130,4 @@ namespace WikiApp
             get { return _definition; }
             set { _definition = value; }
         }
-        //Implementation of IComparable<T> interface for member field/variable name
-        public int CompareTo(Information other)
-        {
-            //-1 if a is less than b
-            //0 if a is equal to b
-            //1 if a is greater than b
-            if (other == null) return 1;
-            return FormWiki.ReplaceString(this._name).CompareTo(FormWiki.ReplaceString(other._name));
-        }
-    }
-    #endregion
-}
-/* Notes
- * ListClass (2020, May 5). Personal communication [Visual Studio Solution]. https://blackboard.southmetrotafe.wa.edu.au
- * Private instance fields start with an underscore (_). https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/identifier-names
-        //property Quickaction and Refractoring...
-        // => used in property is an expression body introduced from C#6, a shorthand for return
-        public string Name { get => _name; set => _name = value; }
-        public string Category { get => _category; set => _category = value; }
-        public string Structure { get => _structure; set => _structure = value; }
-        public string Definition { get => _definition; set => _definition = value; }
  */
