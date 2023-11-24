@@ -221,6 +221,8 @@ namespace WikiApp
             //If match exists
             bool validName = Wiki.Exists(info => info.Name == name);
             //return false; //ERROR. if match should not return false as well. Can't add new
+            Trace.TraceInformation("name: {0} \n\tvalidName: {1} \n\t!validName: {2}", name, validName, !validName);
+
             return !validName;
         }
         #endregion
@@ -287,15 +289,17 @@ namespace WikiApp
             {
                 if (textBoxName.Text.Trim() != "~")
                 {
-                    //DialogResult result = MessageBox.Show("Are you sure you want to delete?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                    //if (result == DialogResult.Yes)
-                    //{
-                    int index = listViewInformation.SelectedIndices[0];
-                    Wiki.RemoveAt(index);
-                    DisplayInformation(Wiki, listViewInformation);
-                    toolStripStatusLabel1.Text = $"{textBoxName.Text} is deleted successfully";
-                    ClearInformation(); //Clear previous selection
-                    //}
+                    DialogResult result = MessageBox.Show("Are you sure you want to delete?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    if (result == DialogResult.Yes)
+                    {
+                        int index = listViewInformation.SelectedIndices[0];
+                        Wiki.RemoveAt(index);
+                        DisplayInformation(Wiki, listViewInformation);
+                        toolStripStatusLabel1.Text = $"{textBoxName.Text} is deleted successfully";
+                        ClearInformation(); //Clear previous selection
+                                            //Trace value on Output window Ctrl+Alt+O. {0} is format specifier, index is value that will replace {0} in log message
+                        Trace.TraceInformation("WikiIndex: {0} \t name: {1} \n\t DialogResult: {2}", index, Wiki[index].Name, result);
+                    }
                 }
                 else
                     toolStripStatusLabel1.Text = "Please enter proper value";
@@ -331,9 +335,15 @@ namespace WikiApp
                     info.Category = comboBoxCategory.Text;
                     HighlightStructure(info.Structure); //highlight checked box
                     info.Definition = textBoxDefinition.Text;
+                    //Trace value on Output window Ctrl+Alt+O. {0} is format specifier, index is value that will replace {0} in log message
+                    Trace.TraceInformation("Before Sort Wiki.IndexOf(info): {0} \t Wiki[index].Name: {1} \n\t listViewInformation.SelectedItems[0].SubItems[0].Text current text: {2}", Wiki.IndexOf(info), Wiki[index].Name, listViewInformation.SelectedItems[0].SubItems[0].Text);
                     // display new values to listView
                     DisplayInformation(Wiki, listViewInformation);
                     toolStripStatusLabel1.Text = $"{textBoxName.Text} is edited successfully";
+                    //For Tracing
+                    listViewInformation.SelectedIndices.Clear(); //fix selecting previous index / making multiple .SelectedIndices.Add
+                    listViewInformation.SelectedIndices.Add(Wiki.IndexOf(info));
+                    Trace.TraceInformation("After Sort Wiki.IndexOf(info): {0} \t Wiki[index].Name: {1} \n\t listViewInformation.SelectedItems[0].SubItems[0].Text current text: {2}", Wiki.IndexOf(info), Wiki[index].Name, listViewInformation.SelectedItems[0].SubItems[0].Text);
                 }
                 else
                     toolStripStatusLabel1.Text = "Please enter proper value";

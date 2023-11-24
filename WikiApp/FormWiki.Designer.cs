@@ -325,7 +325,7 @@
             Controls.Add(listViewInformation);
             Controls.Add(groupBox1);
             Name = "FormWiki";
-            Text = "WikiApp Version 1.1.1-Alpha";
+            Text = "WikiApp Version 1.1.3-Alpha";
             FormClosing += FormWiki_FormClosing;
             Load += FormWiki_Load;
             statusStrip1.ResumeLayout(false);
