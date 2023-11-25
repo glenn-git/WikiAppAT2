@@ -10,6 +10,8 @@ using System.Text.RegularExpressions;
 using System.Drawing;
 using System.Xml.Linq;
 using System;
+using System.Reflection;
+using System.Net.Security;
 
 namespace WikiApp
 {
@@ -24,6 +26,7 @@ namespace WikiApp
             toolStripStatusLabel1.Text = "Thank you for using " + this.Text + ". Welcome!";
             //Controls
             textBoxDefinition.ScrollBars = ScrollBars.Vertical;
+            listViewInformation.MultiSelect = false; // delete / edit code is only for 1 selection
         }
         #region FIELDS List<T> Global
         /// <summary>
@@ -35,7 +38,7 @@ namespace WikiApp
         /// </remarks>
         private List<Information> Wiki = new List<Information>();
         private const string FileNameCategory = "category.txt"; //file systems on Windows are case-insensitive. Not Linux / macOS. C# convention use PascalCase Categories.txt, but use conventions followed by team or community.
-        private const string FileNameInformation = "definitions.dat";
+        private const string FileNameInformation = "definitions.dat"; //Default save file name
         Stopwatch stopwatch = new Stopwatch(); // stopwatch to measure time
         #endregion
 
@@ -46,12 +49,10 @@ namespace WikiApp
         /// </summary>
         private void buttonAdd_Click(object sender, EventArgs e)
         {
-            AddRecord();
-            //Display from Information to listView
-            //DisplayInformation(Wiki, listViewInformation); //ERROR. display change back ChangeControlColour to default
+            AddInfo();
+            //DisplayInformation(Wiki, listViewInformation); //ERROR. display change back ChangeControlColour to default. should be only if valid
         }
-
-        private void AddRecord()
+        private void AddInfo()
         {
             //Get values from control inputs        
             string name = textBoxName.Text;
@@ -82,11 +83,11 @@ namespace WikiApp
             //string structure = radioButtonLinear.Checked ? "Linear" : (radioButtonNonLinear.Checked ? "Non-Linear" : ""); //ternary conditional operator still not sure how to use
             if (radioButtonLinear.Checked)
             {
-                structure = radioButtonLinear.Text;
+                structure = ReturnStructure();
             }
             else if (radioButtonNonLinear.Checked)
             {
-                structure = radioButtonNonLinear.Text;
+                structure = ReturnStructure();
             }
             else
             {
@@ -100,7 +101,7 @@ namespace WikiApp
                 ChangeControlColour(1, textBoxDefinition);
                 return;
             }
-            //If trimmed after if (ValidName(name)) this will bypass duplicate check as values are always different
+            //If trimmed after if (ValidName(name)) this will bypass duplicate check as values are always different.
             string str = textBoxName.Text.Trim();
             name = char.ToUpper(str[0]) + str.Substring(1);
             //Finally check duplicate name. If valid then add
@@ -112,10 +113,10 @@ namespace WikiApp
                 str = textBoxDefinition.Text.Trim();
                 definition = char.ToUpper(str[0]) + str.Substring(1);
 
-                //Start adding Information to listView
+                //Start ADD Information to listView
                 Information info = new Information(name, category, structure, definition);
                 Wiki.Add(info);
-                //Also update category drop down if distinct
+                //Update category drop down if distinct
                 if (!comboBoxCategory.Items.Contains(category))
                     comboBoxCategory.Items.Add(category);
                 //Update display from Information to listView
@@ -199,7 +200,7 @@ namespace WikiApp
                     //string categories
                     string categories = "Abstract\nArray\nGraph\nHash\nList\nTree";
                     File.WriteAllText(FileNameCategory, categories);
-                    MessageBox.Show("Cannot find Category.txt. default file is created instead. Please try again");
+                    MessageBox.Show("Cannot find Category.txt. default file is created instead. Please close app or use reset button and try again");
                     //toolStripStatusLabel1.Text = "File created successfully!";
                 }
             }
@@ -221,8 +222,7 @@ namespace WikiApp
             //If match exists
             bool validName = Wiki.Exists(info => info.GetName() == name);
             //return false; //ERROR. if match should not return false as well. Can't add new
-            Trace.TraceInformation("name: {0} \n\tvalidName: {1} \n\t!validName: {2}", name, validName, !validName);
-
+            Trace.TraceInformation("ValidName name: {0} \tvalidName: {1} \t!validName: {2}", name, validName, !validName);
             return !validName;
         }
         #endregion
@@ -234,21 +234,19 @@ namespace WikiApp
         /// The second method must send an integer index which will highlight an appropriate radio button.
         /// </summary>
         //1st Method: Return string value from checked radio button
-        private string CheckStructureValue()
+        private string ReturnStructure()
         {
             if (radioButtonLinear.Checked)
             {
-                return radioButtonLinear.Text;
+                return "Linear"; //radioButtonLinear.Text also works
             }
             else if (radioButtonNonLinear.Checked)
             {
-                return radioButtonNonLinear.Text;
+                return "Non-Linear"; //radioButtonNonLinear.Text also works
             }
             else
             {
-                ChangeControlColour(1, radioButtonLinear);
-                ChangeControlColour(1, radioButtonNonLinear);
-                return "~";
+                return "~"; //this is an error if saved value is "~"
             }
         }
         //2nd Method: Highlight 
@@ -281,29 +279,26 @@ namespace WikiApp
         //Delete button
         private void buttonDelete_Click(object sender, EventArgs e)
         {
-            if (listViewInformation.SelectedItems.Count == 0)
+            int index = listViewInformation.FocusedItem.Index;
+            //int index = listViewInformation.SelectedIndices[0]; //ERROR. listview index is different to wiki index (unsorted) 
+            DialogResult result = MessageBox.Show("Are you sure you want to delete?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            Trace.TraceInformation("Before delete. Index: {0} \t DialogResult: {1}", index, result);
+            if (result == DialogResult.Yes)
             {
-                toolStripStatusLabel1.Text = "Please select from the list first to delete";
+                Wiki.RemoveAt(index);
+                Trace.TraceInformation("After delete before display sort. Index: {0} \t DialogResult: {1}", index, result);
+                DisplayInformation(Wiki, listViewInformation);
+                toolStripStatusLabel1.Text = $"{textBoxName.Text} is deleted successfully";
+                //Clear previous selection fields
+                ClearInformation();
+                //For tracing. Wiki[index].GetName() ERROR when deleting last one. Listview index starts from 1 not 0. index also not updated after delete as selection cleared. not sure how to fix.
+                Trace.TraceInformation("After delete after display Sort. index: {0} \t DialogResult: {1}", index, result);
             }
-            else
+            else if (result == DialogResult.No)
             {
-                if (textBoxName.Text.Trim() != "~")
-                {
-                    DialogResult result = MessageBox.Show("Are you sure you want to delete?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                    if (result == DialogResult.Yes)
-                    {
-                        int index = listViewInformation.SelectedIndices[0];
-                        Wiki.RemoveAt(index);
-                        DisplayInformation(Wiki, listViewInformation);
-                        toolStripStatusLabel1.Text = $"{textBoxName.Text} is deleted successfully";
-                        ClearInformation(); //Clear previous selection
-                                            //Trace value on Output window Ctrl+Alt+O. {0} is format specifier, index is value that will replace {0} in log message
-                        Trace.TraceInformation("WikiIndex: {0} \t name: {1} \n\t DialogResult: {2}", index, Wiki[index].GetName(), result);
-                    }
-                }
-                else
-                    toolStripStatusLabel1.Text = "Please enter proper value";
+                //close dialog, do nothing
             }
+
         }
         #endregion
 
@@ -315,38 +310,150 @@ namespace WikiApp
         /// </summary>
         private void buttonEdit_Click(object sender, EventArgs e)
         {
-            EditInformation();
-        }
-        //Edit from listView to Information
-        private void EditInformation()
-        {
             if (listViewInformation.SelectedItems.Count == 0)
             {
                 toolStripStatusLabel1.Text = "Please select from the list first to edit";
             }
             else
             {
+                //for old AT1 ~ checks
                 if (textBoxName.Text.Trim() != "~")
                 {
-                    int index = listViewInformation.SelectedIndices[0];
-                    Information info = Wiki[index];
-                    // show values from Information Class
-                    info.SetName(textBoxName.Text);
-                    info.SetCategory(comboBoxCategory.Text);
-                    HighlightStructure(info.GetStructure()); //highlight checked box
-                    info.SetDefinition(textBoxDefinition.Text);
-                    //Trace value on Output window Ctrl+Alt+O. {0} is format specifier, index is value that will replace {0} in log message
-                    Trace.TraceInformation("Before Sort Wiki.IndexOf(info): {0} \t Wiki[index].Name: {1} \n\t listViewInformation.SelectedItems[0].SubItems[0].Text current text: {2}", Wiki.IndexOf(info), Wiki[index].GetName(), listViewInformation.SelectedItems[0].SubItems[0].Text);
-                    // display new values to listView
-                    DisplayInformation(Wiki, listViewInformation);
-                    toolStripStatusLabel1.Text = $"{textBoxName.Text} is edited successfully";
-                    //For Tracing
-                    listViewInformation.SelectedIndices.Clear(); //fix selecting previous index / making multiple .SelectedIndices.Add
-                    listViewInformation.SelectedIndices.Add(Wiki.IndexOf(info));
-                    Trace.TraceInformation("After Sort Wiki.IndexOf(info): {0} \t Wiki[index].Name: {1} \n\t listViewInformation.SelectedItems[0].SubItems[0].Text current text: {2}", Wiki.IndexOf(info), Wiki[index].GetName(), listViewInformation.SelectedItems[0].SubItems[0].Text);
+                    EditInformation();
                 }
                 else
                     toolStripStatusLabel1.Text = "Please enter proper value";
+            }
+        }
+        //Edit from listView to Information
+        //Edit should have the same checks as ADD method until valid
+        private void EditInformation()
+        {
+            //Get values from control inputs
+            string oldName = textBoxName.Text;
+            string name = textBoxName.Text;
+            string category = comboBoxCategory.Text;
+            string structure; //get values later if radiobutton checked
+            string definition = textBoxDefinition.Text;
+            //Check name
+            if (string.IsNullOrWhiteSpace(textBoxName.Text))
+            {
+                toolStripStatusLabel1.Text = "Please enter name";
+                ChangeControlColour(1, textBoxName);
+                return;
+            }
+            if (textBoxName.Text == "~")
+            {
+                toolStripStatusLabel1.Text = "Please enter proper value";
+                return;
+            }
+            //Check category
+            if (string.IsNullOrWhiteSpace(comboBoxCategory.Text))
+            {
+                toolStripStatusLabel1.Text = "Please enter category";
+                ChangeControlColour(1, comboBoxCategory);
+                return;
+            }
+            //Check structure
+            //condition ? consequent : alternative https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/conditional-operator
+            //string structure = radioButtonLinear.Checked ? "Linear" : (radioButtonNonLinear.Checked ? "Non-Linear" : ""); //ternary conditional operator still not sure how to use
+            if (radioButtonLinear.Checked)
+            {
+                structure = ReturnStructure();
+            }
+            else if (radioButtonNonLinear.Checked)
+            {
+                structure = ReturnStructure();
+            }
+            else
+            {
+                toolStripStatusLabel1.Text = "Please select structure";
+                return;
+            }
+            //Check definition
+            if (string.IsNullOrWhiteSpace(textBoxDefinition.Text))
+            {
+                toolStripStatusLabel1.Text = "Please enter definition";
+                ChangeControlColour(1, textBoxDefinition);
+                return;
+            }
+            //If trimmed after if (ValidName(name)) this will bypass duplicate check as values are always different.
+            string str = textBoxName.Text.Trim();
+            name = char.ToUpper(str[0]) + str.Substring(1);
+
+            //Finally check duplicate name. If valid then EDIT. if not valid = duplicate
+            if (ValidName(name) || oldName == name)
+            //if (ValidName(name)) //ERROR. if just want to edit definition etc for same name, must change name.
+            {
+                //Replace other values that needs trim and capitalised first letter
+                str = comboBoxCategory.Text.Trim();
+                category = char.ToUpper(str[0]) + str.Substring(1);
+                str = textBoxDefinition.Text.Trim();
+                definition = char.ToUpper(str[0]) + str.Substring(1);
+
+                //Start EDIT Information to listView
+                int index = listViewInformation.FocusedItem.Index; //ERROR. null reference caused by pressing edit twice / edit then delete bypass check: please select from the list first to edit
+                //int index = listViewInformation.SelectedIndices[0]; //ERROR. listview index is different to wiki index (unsorted) 
+                //set values Information Class selected index
+                Wiki[index].SetName(name);
+                Wiki[index].SetCategory(category);
+                if (radioButtonLinear.Checked)
+                {
+                    Wiki[index].SetStructure(ReturnStructure());
+                }
+                else if (radioButtonNonLinear.Checked)
+                {
+                    Wiki[index].SetStructure(ReturnStructure());
+                }
+                //editing should already have value
+                //else
+                //{
+                //    toolStripStatusLabel1.Text = "Please select structure";
+                //    return;
+                //}
+                //    HighlightStructure(info.GetStructure()); //highlight checked box. ERROR only highlights not setting value
+                Wiki[index].SetDefinition(definition);
+
+                //Update category drop down if distinct
+                comboBoxCategory.Items.Clear();
+                //Create hashset that can store distinct values
+                HashSet<string> distinctCategories = new HashSet<string>();
+                //get categories values from Wiki
+                foreach (var info in Wiki)
+                {
+                    distinctCategories.Add(info.GetCategory());
+                }
+                foreach (var distinctCategory in distinctCategories)
+                {
+                    //Start adding categories.  //ERROR. edit/add method different. edited previous value that no longer exist still exist.
+                    if (!comboBoxCategory.Items.Contains(distinctCategory))
+                        comboBoxCategory.Items.Add(distinctCategory);
+                }
+                //Update display from Information to listView
+                DisplayInformation(Wiki, listViewInformation);
+
+                //Clear selection
+                listViewInformation.SelectedIndices.Clear(); //to fix pressing edit button twice in a row, causing null reference crash
+                //listViewInformation.SelectedIndices.Add(Wiki.IndexOf(Wiki[index]));//cannot update? null reference crash if edit 2x or edit then delete
+
+                //Update status
+                toolStripStatusLabel1.Text = $"{textBoxName.Text} is edited successfully";
+
+                //For Tracing.
+                Trace.TraceInformation("EDIT oldname: {0} \tname: {1}\t focused item index: {2} \tWiki.IndexOf(Wiki[index]): {3} should be same", oldName, name, index, Wiki.IndexOf(Wiki[index]));
+            }
+            else
+            {
+                if (ValidName(name))
+                {
+                    toolStripStatusLabel1.Text = $"{textBoxName.Text} exists. not a valid name";
+                }
+                else
+                {
+                    toolStripStatusLabel1.Text = $"{textBoxName.Text} is edited successfully";
+                }
+                //toolStripStatusLabel1.Text = $"{textBoxName.Text} exists. not a valid name"; ERROR. if just want to edit definition etc for same name: successful but says exists, but not a valid name
+
             }
         }
         #endregion
@@ -425,7 +532,7 @@ namespace WikiApp
                 //    SetName(searchName); //ERROR. Name = searchName does not work with separate setter
                 //};
                 // Use built-in binarysearch to find index
-                //not sure how to use ReplaceString on Wiki before comparing.
+                //not sure how to use ReplaceString on Wiki before comparing. fixed?
                 int searchIndex = Wiki.BinarySearch(searchInfo);
                 //Wiki.BinarySearch(searchName); //ERROR CS1503 Cannot convert from string to WikiApp.Information
                 if (searchIndex >= 0)
@@ -492,6 +599,10 @@ namespace WikiApp
         {
             ClearInformation();
         }
+        private void textBoxSearch_DoubleClick(object sender, EventArgs e)
+        {
+            ClearInformation();
+        }
         #endregion
 
         #region OPEN/SAVE button
@@ -503,10 +614,10 @@ namespace WikiApp
         private void buttonOpen_Click(object sender, EventArgs e)
         {
             stopwatch.Reset();
-            stopwatch.Start();
             //Open file dialog to return file path as string
             string filePath = OpenFileDialog();
             //Open from binary to Information Wiki
+            stopwatch.Start();
             OpenFromBinary(filePath);
             DisplayInformation(Wiki, listViewInformation);
             stopwatch.Stop();
@@ -586,8 +697,9 @@ namespace WikiApp
         //Save button //need to add for txt
         private void buttonSave_Click(object sender, EventArgs e)
         {
-            SaveFileDialog();
-            SaveToBinary(FileNameInformation);
+            //Save file dialog to return file path as string
+            string filePath = SaveFileDialog();
+            SaveToBinary(filePath);
         }
         private string SaveFileDialog()
         {
@@ -654,8 +766,9 @@ namespace WikiApp
 
             if (result == DialogResult.Yes)
             {
-                SaveFileDialog();
-                SaveToBinary(FileNameInformation);
+                //Save file dialog to return file path as string
+                string filePath = SaveFileDialog();
+                SaveToBinary(filePath);
             }
             else if (result == DialogResult.Cancel)
             {
@@ -665,17 +778,19 @@ namespace WikiApp
         }
         #endregion
 
-        #region
+        #region OTHER
         /// <summary>
         /// 6.16 All code is required to be adequately commented.
         /// Map the programming criteria and features to your code/methods by adding comments above the method signatures.
         /// Ensure your code is compliant with the CITEMS coding standards (refer http://www.citems.com.au/). 
         /// </summary>
+        //Mouse click event for category
         private void comboBoxCategory_MouseClick(object sender, MouseEventArgs e)
         {
             //Sort when drop down opened.
             comboBoxCategory.Sorted = true;
         }
+        //TextChanged event for control inputs
         private void textBoxName_TextChanged(object sender, EventArgs e)
         {
             ValidateText(textBoxName, 32);
@@ -758,6 +873,8 @@ namespace WikiApp
             Wiki.Clear();
             listViewInformation.Items.Clear();
             toolStripStatusLabel1.Text = string.Empty;
+            //Initialize
+            initializeCategory();
         }
         #endregion
     }
@@ -798,7 +915,10 @@ namespace WikiApp
         /// file stream <see href="https://learn.microsoft.com/en-us/dotnet/api/system.io.filestream?view=net-7.0"/><br></br>
         /// open file dialog <see href="https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.openfiledialog?view=windowsdesktop-7.0"/>
         /// </remarks>
- 
+TRACE
+//Trace value on Output window Ctrl+Alt+O. {0} is format specifier placement for corresponding 'argument' value that will replace {0} in log message
+
+
 ternary conditional operator https://www.reddit.com/r/csharp/comments/13i5rvr/operator/?rdt=51863
 https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/conditional-operator
 */

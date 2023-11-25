@@ -155,6 +155,7 @@
             textBoxSearch.PlaceholderText = "Search";
             textBoxSearch.Size = new Size(340, 27);
             textBoxSearch.TabIndex = 6;
+            textBoxSearch.DoubleClick += textBoxSearch_DoubleClick;
             // 
             // buttonAdd
             // 
