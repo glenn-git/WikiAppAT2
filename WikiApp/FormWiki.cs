@@ -279,26 +279,43 @@ namespace WikiApp
         //Delete button
         private void buttonDelete_Click(object sender, EventArgs e)
         {
+            if (listViewInformation.SelectedItems.Count == 0)
+            {
+                toolStripStatusLabel1.Text = "Please select from the list first to delete";
+            }
+            else
+            {
+                DeleteInformation();
+            }
+        }
+        private void DeleteInformation()
+        {
             int index = listViewInformation.FocusedItem.Index;
+            //get item from selected index
+            Information deletedItem = Wiki[index]; //for tracing
             //int index = listViewInformation.SelectedIndices[0]; //ERROR. listview index is different to wiki index (unsorted) 
             DialogResult result = MessageBox.Show("Are you sure you want to delete?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            Trace.TraceInformation("Before delete. Index: {0} \t DialogResult: {1}", index, result);
+            Trace.TraceInformation("Before delete before display sort. Index: {0} \tDialogResult: {1} \tName: {2} \tWiki.Count: {3}", index, result, deletedItem.GetName(), Wiki.Count);
             if (result == DialogResult.Yes)
             {
                 Wiki.RemoveAt(index);
-                Trace.TraceInformation("After delete before display sort. Index: {0} \t DialogResult: {1}", index, result);
+                //Trace.TraceInformation("After delete before display sort. Index: {0} \t DialogResult: {1}", index, result);
+                Trace.TraceInformation("After delete before display sort. Index: {0} \tDialogResult: {1} \tName: {2} \tWiki.Count: {3}", index, result, deletedItem.GetName(), Wiki.Count);
+                //Trace.TraceInformation("Deleting Information. Index: {0} \t Name: {1}", index, Wiki[index].GetName()); //ERROR.Wiki[index].GetName get current name not deleted item.
                 DisplayInformation(Wiki, listViewInformation);
-                toolStripStatusLabel1.Text = $"{textBoxName.Text} is deleted successfully";
+                toolStripStatusLabel1.Text = $"{deletedItem.GetName()} is deleted successfully";
+                //toolStripStatusLabel1.Text = $"{Wiki[index].GetName()} is deleted successfully"; //ERROR.System.ArgumentOutOfRangeException: out of bound when deleting last item. Index was out of range. Must be non-negative and less than the size of the collection. (Parameter 'index')'
+                //toolStripStatusLabel1.Text = $"{textBoxName.Text} is deleted successfully"; //ERROR. select then edit text will show edited text instead.
                 //Clear previous selection fields
                 ClearInformation();
                 //For tracing. Wiki[index].GetName() ERROR when deleting last one. Listview index starts from 1 not 0. index also not updated after delete as selection cleared. not sure how to fix.
-                Trace.TraceInformation("After delete after display Sort. index: {0} \t DialogResult: {1}", index, result);
+                Trace.TraceInformation("After delete after display sort. Index: {0} \tDialogResult: {1} \tName: {2} \tWiki.Count: {3}", index, result, deletedItem.GetName(), Wiki.Count);
+                //Trace.TraceInformation("After delete after display Sort. index: {0} \t DialogResult: {1}", index, result);
             }
             else if (result == DialogResult.No)
             {
                 //close dialog, do nothing
             }
-
         }
         #endregion
 
